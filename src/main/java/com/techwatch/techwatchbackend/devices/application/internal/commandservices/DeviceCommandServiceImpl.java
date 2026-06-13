@@ -3,6 +3,8 @@ package com.techwatch.techwatchbackend.devices.application.internal.commandservi
 import com.techwatch.techwatchbackend.devices.application.commandservices.DeviceCommandService;
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Device;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.AddDeviceToSpaceCommand;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.EditDeviceCommand;
+import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.PowerWatts;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.SpaceId;
 import com.techwatch.techwatchbackend.devices.domain.repositories.DeviceRepository;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
@@ -37,5 +39,25 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
             return Result.failure(ApplicationError.unexpected("add-device-to-space", e.getMessage()));
         }
         return Result.success(device.getId());
+    }
+
+    @Override
+    public Result<Device, ApplicationError> handle(EditDeviceCommand command) {
+        var result = deviceRepository.findById(command.deviceId());
+        if (result.isEmpty())
+            return Result.failure(ApplicationError.notFound("Device", command.deviceId().toString()));
+        var device = result.get();
+        boolean nameTaken = deviceRepository.findAllBySpaceId(device.getSpaceId()).stream()
+                .anyMatch(other -> !other.getId().equals(device.getId()) && other.getName().equals(command.name()));
+        if (nameTaken)
+            return Result.failure(ApplicationError.conflict("Device",
+                    "Device with name '%s' already exists in this space".formatted(command.name())));
+        try {
+            var updated = deviceRepository.save(device.updateInformation(
+                    command.name(), command.brand(), command.model(), command.type(), new PowerWatts(command.powerWatts())));
+            return Result.success(updated);
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("edit-device", e.getMessage()));
+        }
     }
 }
