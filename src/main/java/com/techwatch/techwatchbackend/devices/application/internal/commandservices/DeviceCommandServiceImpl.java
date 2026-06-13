@@ -3,6 +3,7 @@ package com.techwatch.techwatchbackend.devices.application.internal.commandservi
 import com.techwatch.techwatchbackend.devices.application.commandservices.DeviceCommandService;
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Device;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.AddDeviceToSpaceCommand;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.DeleteDeviceCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.EditDeviceCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.PowerWatts;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.SpaceId;
@@ -58,6 +59,18 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
             return Result.success(updated);
         } catch (Exception e) {
             return Result.failure(ApplicationError.unexpected("edit-device", e.getMessage()));
+        }
+    }
+
+    @Override
+    public Result<Long, ApplicationError> handle(DeleteDeviceCommand command) {
+        if (!deviceRepository.existsById(command.deviceId()))
+            return Result.failure(ApplicationError.notFound("Device", command.deviceId().toString()));
+        try {
+            deviceRepository.deleteById(command.deviceId());
+            return Result.success(command.deviceId());
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("delete-device", e.getMessage()));
         }
     }
 }
