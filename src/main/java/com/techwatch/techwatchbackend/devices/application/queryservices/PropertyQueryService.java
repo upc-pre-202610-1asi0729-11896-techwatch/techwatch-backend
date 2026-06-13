@@ -1,8 +1,10 @@
 package com.techwatch.techwatchbackend.devices.application.queryservices;
 
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Property;
+import com.techwatch.techwatchbackend.devices.domain.model.entities.Space;
 import com.techwatch.techwatchbackend.devices.domain.model.queries.GetPropertiesByUserIdQuery;
 import com.techwatch.techwatchbackend.devices.domain.model.queries.GetPropertyByIdQuery;
+import com.techwatch.techwatchbackend.devices.domain.model.queries.GetSpaceByPropertyIdAndNameQuery;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,4 +30,13 @@ public interface PropertyQueryService {
      * @see GetPropertiesByUserIdQuery
      */
     List<Property> handle(GetPropertiesByUserIdQuery query);
+
+    /**
+     * Handles retrieval of a space by its owning property and name.
+     *
+     * @param query property-id and space-name query
+     * @return matching space, if found
+     * @see GetSpaceByPropertyIdAndNameQuery
+     */
+    Optional<Space> handle(GetSpaceByPropertyIdAndNameQuery query);
 }
