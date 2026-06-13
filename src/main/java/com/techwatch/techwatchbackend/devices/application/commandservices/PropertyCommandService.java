@@ -1,6 +1,7 @@
 package com.techwatch.techwatchbackend.devices.application.commandservices;
 
 import com.techwatch.techwatchbackend.devices.domain.model.commands.CreatePropertyCommand;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.CreateSpaceCommand;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
 
@@ -16,4 +17,13 @@ public interface PropertyCommandService {
      * @see CreatePropertyCommand
      */
     Result<Long, ApplicationError> handle(CreatePropertyCommand command);
+
+    /**
+     * Handles the creation of a space within a property.
+     *
+     * @param command command containing the target property id and the space data
+     * @return the owning property identifier or an application error
+     * @see CreateSpaceCommand
+     */
+    Result<Long, ApplicationError> handle(CreateSpaceCommand command);
 }

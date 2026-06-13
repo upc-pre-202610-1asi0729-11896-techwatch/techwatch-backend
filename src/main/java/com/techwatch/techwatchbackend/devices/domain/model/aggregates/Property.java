@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Property aggregate root.
@@ -102,6 +103,17 @@ public class Property extends AbstractDomainAggregateRoot<Property> {
         var space = new Space(name, description);
         this.spaces.add(space);
         return space;
+    }
+
+    /**
+     * Finds a space owned by this property by its name.
+     * @param name The name of the space.
+     * @return an {@link Optional} with the matching space, or empty if none matches.
+     */
+    public Optional<Space> getSpaceByName(String name) {
+        return this.spaces.stream()
+                .filter(space -> space.getName().equals(name))
+                .findFirst();
     }
 
     /**
