@@ -2,7 +2,6 @@ package com.techwatch.techwatchbackend.devices.interfaces.rest.transform;
 
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Property;
 import com.techwatch.techwatchbackend.devices.interfaces.rest.resources.PropertyResource;
-import com.techwatch.techwatchbackend.devices.interfaces.rest.resources.SpaceResource;
 
 /**
  * Assembler to convert a Property aggregate to a PropertyResource.
@@ -16,7 +15,7 @@ public class PropertyResourceFromEntityAssembler {
      */
     public static PropertyResource toResourceFromEntity(Property entity) {
         var spaces = entity.getSpaces().stream()
-                .map(space -> new SpaceResource(space.getId(), space.getName(), space.getDescription()))
+                .map(SpaceResourceFromEntityAssembler::toResourceFromEntity)
                 .toList();
         return new PropertyResource(
                 entity.getId(),
