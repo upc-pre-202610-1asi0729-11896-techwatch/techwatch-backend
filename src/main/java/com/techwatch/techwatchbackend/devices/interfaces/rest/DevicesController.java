@@ -3,6 +3,7 @@ package com.techwatch.techwatchbackend.devices.interfaces.rest;
 import com.techwatch.techwatchbackend.devices.application.commandservices.DeviceCommandService;
 import com.techwatch.techwatchbackend.devices.application.queryservices.DeviceQueryService;
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Device;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.DeleteDeviceCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.queries.GetDeviceByIdQuery;
 import com.techwatch.techwatchbackend.devices.domain.model.queries.GetDevicesBySpaceIdQuery;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.SpaceId;
@@ -14,6 +15,7 @@ import com.techwatch.techwatchbackend.devices.interfaces.rest.transform.DeviceRe
 import com.techwatch.techwatchbackend.devices.interfaces.rest.transform.EditDeviceCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
+import com.techwatch.techwatchbackend.shared.interfaces.rest.resources.MessageResource;
 import com.techwatch.techwatchbackend.shared.interfaces.rest.transform.ResponseEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -161,5 +163,31 @@ public class DevicesController {
                 .map(DeviceResourceFromEntityAssembler::toResourceFromEntity)
                 .toList();
         return ResponseEntity.ok(resources);
+    }
+
+    /**
+     * Delete a device.
+     *
+     * @param deviceId The device id
+     * @return a confirmation message
+     */
+    @DeleteMapping("/{deviceId}")
+    @Operation(summary = "Delete a device", description = "Deletes a device by its unique identifier.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Device deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Device not found")
+    })
+    public ResponseEntity<?> deleteDevice(
+            @PathVariable
+            @Parameter(description = "Unique device identifier", example = "1", required = true)
+            Long deviceId
+    ) {
+        var result = deviceCommandService.handle(new DeleteDeviceCommand(deviceId))
+                .map(deletedId -> new MessageResource("Device with given id successfully deleted"));
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                message -> message,
+                HttpStatus.OK
+        );
     }
 }

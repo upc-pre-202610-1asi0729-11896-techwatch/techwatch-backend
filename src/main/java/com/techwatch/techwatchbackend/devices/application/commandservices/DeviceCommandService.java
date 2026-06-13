@@ -2,6 +2,7 @@ package com.techwatch.techwatchbackend.devices.application.commandservices;
 
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Device;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.AddDeviceToSpaceCommand;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.DeleteDeviceCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.EditDeviceCommand;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
@@ -27,4 +28,13 @@ public interface DeviceCommandService {
      * @see EditDeviceCommand
      */
     Result<Device, ApplicationError> handle(EditDeviceCommand command);
+
+    /**
+     * Handles the deletion of a device.
+     *
+     * @param command command containing the target device id
+     * @return deleted device identifier or an application error
+     * @see DeleteDeviceCommand
+     */
+    Result<Long, ApplicationError> handle(DeleteDeviceCommand command);
 }
