@@ -1,0 +1,24 @@
+package com.techwatch.techwatchbackend.devices.domain.model.valueobjects;
+
+/**
+ * Value object representing the id of a user.
+ *
+ * <p>
+ * This value object is used to link a property in the device management domain to a user
+ * owned by the IAM domain. It is a cross-context reference and must be a positive Long value.
+ * </p>
+ *
+ * @param userId The user id. It cannot be null or less than 1.
+ */
+public record UserId(Long userId) {
+    /**
+     * Compact constructor for UserId.
+     * Validates that the userId is not null and is greater than or equal to 1.
+     * @throws IllegalArgumentException if the userId is null or less than 1.
+     */
+    public UserId {
+        if (userId == null || userId < 1) {
+            throw new IllegalArgumentException("User id cannot be null or less than 1");
+        }
+    }
+}
