@@ -8,8 +8,10 @@ import com.techwatch.techwatchbackend.devices.domain.model.queries.GetDevicesByS
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.SpaceId;
 import com.techwatch.techwatchbackend.devices.interfaces.rest.resources.CreateDeviceResource;
 import com.techwatch.techwatchbackend.devices.interfaces.rest.resources.DeviceResource;
+import com.techwatch.techwatchbackend.devices.interfaces.rest.resources.EditDeviceResource;
 import com.techwatch.techwatchbackend.devices.interfaces.rest.transform.CreateDeviceCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.devices.interfaces.rest.transform.DeviceResourceFromEntityAssembler;
+import com.techwatch.techwatchbackend.devices.interfaces.rest.transform.EditDeviceCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
 import com.techwatch.techwatchbackend.shared.interfaces.rest.transform.ResponseEntityAssembler;
@@ -98,6 +100,40 @@ public class DevicesController {
         var device = deviceQueryService.handle(new GetDeviceByIdQuery(deviceId));
         if (device.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(DeviceResourceFromEntityAssembler.toResourceFromEntity(device.get()));
+    }
+
+    /**
+     * Edit the descriptive information of a device.
+     *
+     * @param deviceId The device id
+     * @param resource The {@link EditDeviceResource} instance
+     * @return The {@link DeviceResource} resource for the updated device
+     */
+    @PutMapping("/{deviceId}")
+    @Operation(summary = "Edit a device", description = "Updates the descriptive information of an existing device.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Device updated successfully",
+                    content = @Content(schema = @Schema(implementation = DeviceResource.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "409", description = "Device name already exists in the space")
+    })
+    public ResponseEntity<?> editDevice(
+            @PathVariable
+            @Parameter(description = "Unique device identifier", example = "1", required = true)
+            Long deviceId,
+            @RequestBody EditDeviceResource resource
+    ) {
+        var command = EditDeviceCommandFromResourceAssembler.toCommandFromResource(deviceId, resource);
+        var result = deviceCommandService.handle(command);
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                DeviceResourceFromEntityAssembler::toResourceFromEntity,
+                HttpStatus.OK
+        );
     }
 
     /**
