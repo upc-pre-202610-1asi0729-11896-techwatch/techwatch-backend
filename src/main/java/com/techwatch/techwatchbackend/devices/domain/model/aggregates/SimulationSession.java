@@ -106,6 +106,16 @@ public class SimulationSession extends AbstractDomainAggregateRoot<SimulationSes
     }
 
     /**
+     * Ends the session, setting its status to ENDED and recording the end timestamp.
+     * @return the updated SimulationSession instance.
+     */
+    public SimulationSession end() {
+        this.status = SessionStatus.ENDED;
+        this.endedAt = LocalDateTime.now();
+        return this;
+    }
+
+    /**
      * Records an action executed against a device during the session, generating the corresponding
      * usage data and registering a {@link UsageDataGeneratedEvent} so that the Analytics context can
      * react to it.
