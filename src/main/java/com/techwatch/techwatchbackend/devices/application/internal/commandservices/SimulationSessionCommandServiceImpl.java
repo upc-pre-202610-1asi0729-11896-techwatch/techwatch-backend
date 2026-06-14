@@ -2,6 +2,7 @@ package com.techwatch.techwatchbackend.devices.application.internal.commandservi
 
 import com.techwatch.techwatchbackend.devices.application.commandservices.SimulationSessionCommandService;
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.SimulationSession;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.EndSimulationSessionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.RecordDeviceActionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.StartSimulationSessionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.DeviceId;
@@ -61,6 +62,23 @@ public class SimulationSessionCommandServiceImpl implements SimulationSessionCom
             return Result.success(saved);
         } catch (Exception e) {
             return Result.failure(ApplicationError.unexpected("record-device-action", e.getMessage()));
+        }
+    }
+
+    @Override
+    public Result<SimulationSession, ApplicationError> handle(EndSimulationSessionCommand command) {
+        var result = simulationSessionRepository.findById(command.sessionId());
+        if (result.isEmpty())
+            return Result.failure(ApplicationError.notFound("SimulationSession", command.sessionId().toString()));
+        var session = result.get();
+        if (!session.isActive())
+            return Result.failure(ApplicationError.businessRuleViolation("end-simulation-session",
+                    "the simulation session is already ended"));
+        try {
+            var saved = simulationSessionRepository.save(session.end());
+            return Result.success(saved);
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("end-simulation-session", e.getMessage()));
         }
     }
 }
