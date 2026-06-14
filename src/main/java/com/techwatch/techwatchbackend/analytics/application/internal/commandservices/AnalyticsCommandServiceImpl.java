@@ -4,6 +4,7 @@ import com.techwatch.techwatchbackend.analytics.application.commandservices.Anal
 import com.techwatch.techwatchbackend.analytics.domain.model.aggregates.ConsumptionAlert;
 import com.techwatch.techwatchbackend.analytics.domain.model.aggregates.ConsumptionMetric;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.CalculateMetricsCommand;
+import com.techwatch.techwatchbackend.analytics.domain.model.commands.MarkAlertAsReadCommand;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.TriggerConsumptionAlertCommand;
 import com.techwatch.techwatchbackend.analytics.domain.repositories.ConsumptionAlertRepository;
 import com.techwatch.techwatchbackend.analytics.domain.repositories.ConsumptionMetricRepository;
@@ -45,5 +46,19 @@ public class AnalyticsCommandServiceImpl implements AnalyticsCommandService {
             return Result.failure(ApplicationError.unexpected("trigger-consumption-alert", e.getMessage()));
         }
         return Result.success(alert.getId());
+    }
+
+    @Override
+    public Result<ConsumptionAlert, ApplicationError> handle(MarkAlertAsReadCommand command) {
+        var result = consumptionAlertRepository.findById(command.alertId());
+        if (result.isEmpty())
+            return Result.failure(ApplicationError.notFound("ConsumptionAlert", command.alertId().toString()));
+        var alert = result.get();
+        try {
+            var updated = consumptionAlertRepository.save(alert.markAsRead());
+            return Result.success(updated);
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("mark-alert-as-read", e.getMessage()));
+        }
     }
 }

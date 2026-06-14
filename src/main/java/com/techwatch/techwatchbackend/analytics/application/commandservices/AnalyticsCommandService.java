@@ -1,6 +1,8 @@
 package com.techwatch.techwatchbackend.analytics.application.commandservices;
 
+import com.techwatch.techwatchbackend.analytics.domain.model.aggregates.ConsumptionAlert;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.CalculateMetricsCommand;
+import com.techwatch.techwatchbackend.analytics.domain.model.commands.MarkAlertAsReadCommand;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.TriggerConsumptionAlertCommand;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
@@ -26,4 +28,13 @@ public interface AnalyticsCommandService {
      * @see TriggerConsumptionAlertCommand
      */
     Result<Long, ApplicationError> handle(TriggerConsumptionAlertCommand command);
+
+    /**
+     * Handles marking a consumption alert as read.
+     *
+     * @param command command containing the target alert id
+     * @return the updated alert aggregate or an application error
+     * @see MarkAlertAsReadCommand
+     */
+    Result<ConsumptionAlert, ApplicationError> handle(MarkAlertAsReadCommand command);
 }
