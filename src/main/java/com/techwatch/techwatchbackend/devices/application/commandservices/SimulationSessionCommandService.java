@@ -1,6 +1,7 @@
 package com.techwatch.techwatchbackend.devices.application.commandservices;
 
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.SimulationSession;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.EndSimulationSessionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.RecordDeviceActionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.StartSimulationSessionCommand;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
@@ -27,4 +28,13 @@ public interface SimulationSessionCommandService {
      * @see RecordDeviceActionCommand
      */
     Result<SimulationSession, ApplicationError> handle(RecordDeviceActionCommand command);
+
+    /**
+     * Handles ending an active simulation session.
+     *
+     * @param command command containing the target session id
+     * @return the ended session aggregate or an application error
+     * @see EndSimulationSessionCommand
+     */
+    Result<SimulationSession, ApplicationError> handle(EndSimulationSessionCommand command);
 }
