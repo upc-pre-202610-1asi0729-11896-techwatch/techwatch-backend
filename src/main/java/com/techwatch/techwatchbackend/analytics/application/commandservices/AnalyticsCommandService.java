@@ -2,6 +2,7 @@ package com.techwatch.techwatchbackend.analytics.application.commandservices;
 
 import com.techwatch.techwatchbackend.analytics.domain.model.aggregates.ConsumptionAlert;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.CalculateMetricsCommand;
+import com.techwatch.techwatchbackend.analytics.domain.model.commands.GenerateConsumptionReportCommand;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.MarkAlertAsReadCommand;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.TriggerConsumptionAlertCommand;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
@@ -37,4 +38,13 @@ public interface AnalyticsCommandService {
      * @see MarkAlertAsReadCommand
      */
     Result<ConsumptionAlert, ApplicationError> handle(MarkAlertAsReadCommand command);
+
+    /**
+     * Handles the generation of a consumption report for a property over a period.
+     *
+     * @param command command containing the user, property and period
+     * @return created report identifier or an application error
+     * @see GenerateConsumptionReportCommand
+     */
+    Result<Long, ApplicationError> handle(GenerateConsumptionReportCommand command);
 }

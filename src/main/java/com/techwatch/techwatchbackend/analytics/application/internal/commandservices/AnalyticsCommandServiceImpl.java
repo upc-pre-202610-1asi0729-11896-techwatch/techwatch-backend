@@ -3,27 +3,44 @@ package com.techwatch.techwatchbackend.analytics.application.internal.commandser
 import com.techwatch.techwatchbackend.analytics.application.commandservices.AnalyticsCommandService;
 import com.techwatch.techwatchbackend.analytics.domain.model.aggregates.ConsumptionAlert;
 import com.techwatch.techwatchbackend.analytics.domain.model.aggregates.ConsumptionMetric;
+import com.techwatch.techwatchbackend.analytics.domain.model.aggregates.ConsumptionReport;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.CalculateMetricsCommand;
+import com.techwatch.techwatchbackend.analytics.domain.model.commands.GenerateConsumptionReportCommand;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.MarkAlertAsReadCommand;
 import com.techwatch.techwatchbackend.analytics.domain.model.commands.TriggerConsumptionAlertCommand;
+import com.techwatch.techwatchbackend.analytics.domain.model.valueobjects.DeviceId;
+import com.techwatch.techwatchbackend.analytics.domain.model.valueobjects.EnergyConsumption;
+import com.techwatch.techwatchbackend.analytics.domain.model.valueobjects.PropertyId;
 import com.techwatch.techwatchbackend.analytics.domain.repositories.ConsumptionAlertRepository;
 import com.techwatch.techwatchbackend.analytics.domain.repositories.ConsumptionMetricRepository;
+import com.techwatch.techwatchbackend.analytics.domain.repositories.ConsumptionReportRepository;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Application service that executes Analytics commands.
  */
 @Service
 public class AnalyticsCommandServiceImpl implements AnalyticsCommandService {
+    private static final String DEFAULT_UNIT = "Wh";
+
     private final ConsumptionMetricRepository consumptionMetricRepository;
     private final ConsumptionAlertRepository consumptionAlertRepository;
+    private final ConsumptionReportRepository consumptionReportRepository;
 
     public AnalyticsCommandServiceImpl(ConsumptionMetricRepository consumptionMetricRepository,
-                                       ConsumptionAlertRepository consumptionAlertRepository) {
+                                       ConsumptionAlertRepository consumptionAlertRepository,
+                                       ConsumptionReportRepository consumptionReportRepository) {
         this.consumptionMetricRepository = consumptionMetricRepository;
         this.consumptionAlertRepository = consumptionAlertRepository;
+        this.consumptionReportRepository = consumptionReportRepository;
     }
 
     @Override
@@ -60,5 +77,39 @@ public class AnalyticsCommandServiceImpl implements AnalyticsCommandService {
         } catch (Exception e) {
             return Result.failure(ApplicationError.unexpected("mark-alert-as-read", e.getMessage()));
         }
+    }
+
+    @Override
+    public Result<Long, ApplicationError> handle(GenerateConsumptionReportCommand command) {
+        var report = new ConsumptionReport(command);
+        // Aggregate the property's metrics within the report period, grouped by device.
+        var metrics = consumptionMetricRepository.findByPropertyId(new PropertyId(command.propertyId())).stream()
+                .filter(metric -> isWithinPeriod(metric.getCalculatedAt(), command.startDate(), command.endDate()))
+                .filter(metric -> metric.getDeviceId() != null)
+                .collect(Collectors.groupingBy(metric -> metric.getDeviceId().deviceId(),
+                        LinkedHashMap::new, Collectors.toList()));
+
+        for (Map.Entry<Long, List<ConsumptionMetric>> entry : metrics.entrySet()) {
+            double total = entry.getValue().stream()
+                    .mapToDouble(metric -> metric.getValue().value())
+                    .sum();
+            int usageFrequency = entry.getValue().size();
+            report.addItem(
+                    new DeviceId(entry.getKey()),
+                    "Device #" + entry.getKey(),
+                    new EnergyConsumption(total, DEFAULT_UNIT),
+                    usageFrequency);
+        }
+
+        try {
+            report = consumptionReportRepository.save(report);
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("generate-consumption-report", e.getMessage()));
+        }
+        return Result.success(report.getId());
+    }
+
+    private boolean isWithinPeriod(LocalDateTime moment, LocalDateTime start, LocalDateTime end) {
+        return moment != null && !moment.isBefore(start) && !moment.isAfter(end);
     }
 }
