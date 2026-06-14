@@ -3,6 +3,7 @@ package com.techwatch.techwatchbackend.devices.interfaces.rest;
 import com.techwatch.techwatchbackend.devices.application.commandservices.SimulationSessionCommandService;
 import com.techwatch.techwatchbackend.devices.application.queryservices.SimulationSessionQueryService;
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.SimulationSession;
+import com.techwatch.techwatchbackend.devices.domain.model.commands.EndSimulationSessionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.queries.GetActiveSimulationSessionByUserIdQuery;
 import com.techwatch.techwatchbackend.devices.domain.model.queries.GetSimulationSessionByIdQuery;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.UserId;
@@ -70,6 +71,36 @@ public class SimulationSessionsController {
                 result,
                 SimulationSessionResourceFromEntityAssembler::toResourceFromEntity,
                 HttpStatus.CREATED
+        );
+    }
+
+    /**
+     * End an active simulation session.
+     *
+     * @param sessionId The session id
+     * @return The {@link SimulationSessionResource} resource for the ended session
+     */
+    @PostMapping("/{sessionId}/end")
+    @Operation(summary = "End a simulation session", description = "Ends an active simulation session, setting its status to ENDED.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Simulation session ended successfully",
+                    content = @Content(schema = @Schema(implementation = SimulationSessionResource.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Simulation session not found"),
+            @ApiResponse(responseCode = "422", description = "The simulation session is already ended")
+    })
+    public ResponseEntity<?> endSimulationSession(
+            @PathVariable
+            @Parameter(description = "Simulation session id", example = "1", required = true)
+            Long sessionId
+    ) {
+        var result = simulationSessionCommandService.handle(new EndSimulationSessionCommand(sessionId));
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                SimulationSessionResourceFromEntityAssembler::toResourceFromEntity,
+                HttpStatus.OK
         );
     }
 
