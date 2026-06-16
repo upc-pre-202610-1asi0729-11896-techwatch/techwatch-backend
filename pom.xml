@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.techwatch</groupId>
     <artifactId>techwatch-backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>techwatch-backend</name>
     <description>techwatch-backend</description>
     <url/>
