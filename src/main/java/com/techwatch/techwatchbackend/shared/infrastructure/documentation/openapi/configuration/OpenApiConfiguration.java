@@ -55,11 +55,12 @@ public class OpenApiConfiguration {
                         .description("TechWatch Platform Documentation")
                         .url("https://github.com/upc-pre-202610-1asi0729-11896-techwatch"));
 
-        // Add server configurations
+        // Use a relative server URL so Swagger UI always targets the same origin
+        // it is served from (localhost, Docker or Railway), avoiding CORS issues.
         openApi.servers(List.of(
                 new Server()
-                        .url("http://localhost:8080")
-                        .description("Local Development Environment")
+                        .url("/")
+                        .description("Current environment")
         ));
 
         return openApi;
