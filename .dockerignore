@@ -1,0 +1,15 @@
+# Build output and IDE/VCS metadata are not needed inside the build context
+target/
+.git/
+.gitignore
+.gitattributes
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+HELP.md
+docker-compose.yml
+.env
+.env.example
+README.md
