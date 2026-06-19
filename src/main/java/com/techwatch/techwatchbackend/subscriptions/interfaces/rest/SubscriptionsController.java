@@ -7,6 +7,10 @@ import com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates.Subs
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.RenewSubscriptionResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.RenewSubscriptionCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.SubscriptionResourceFromEntityAssembler;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v1/subscriptions")
+@Tag(name = "Subscriptions", description = "Subscription management endpoints")
 public class SubscriptionsController {
 
     private final SubscriptionCommandService subscriptionCommandService;
@@ -32,6 +37,17 @@ public class SubscriptionsController {
      * @param resource renewal request body
      * @return renewed subscription resource or application error
      */
+    @Operation(
+            summary = "Renew a subscription",
+            description = "Extends the end date of an existing subscription by the requested number of months."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Subscription renewed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid renewal request"),
+            @ApiResponse(responseCode = "404", description = "Subscription not found"),
+            @ApiResponse(responseCode = "409", description = "Subscription cannot be renewed due to a business rule"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/{subscriptionId}/renew")
     public ResponseEntity<?> renewSubscription(
             @PathVariable Long subscriptionId,
