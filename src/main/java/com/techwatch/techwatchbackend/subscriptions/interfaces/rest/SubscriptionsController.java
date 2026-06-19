@@ -5,6 +5,7 @@ import com.techwatch.techwatchbackend.shared.application.result.Result;
 import com.techwatch.techwatchbackend.subscriptions.application.commandservices.SubscriptionCommandService;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates.Subscription;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.RenewSubscriptionResource;
+import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.ApplicationErrorResponseAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.RenewSubscriptionCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.SubscriptionResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,23 +67,7 @@ public class SubscriptionsController {
                     );
 
             case Result.Failure<Subscription, ApplicationError> failure ->
-                    buildErrorResponse(failure.error());
+                    ApplicationErrorResponseAssembler.toResponseFromError(failure.error());
         };
-    }
-
-    private ResponseEntity<ApplicationError> buildErrorResponse(ApplicationError error) {
-        if (error.code().endsWith("_NOT_FOUND")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-        }
-
-        if (error.code().equals("BUSINESS_RULE_VIOLATION")) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-        }
-
-        if (error.code().equals("VALIDATION_ERROR")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
