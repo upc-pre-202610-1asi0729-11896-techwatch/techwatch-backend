@@ -8,9 +8,11 @@ import com.techwatch.techwatchbackend.profiles.domain.model.queries.GetProfileBy
 import com.techwatch.techwatchbackend.profiles.domain.model.valueobjects.UserId;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.resources.CreateProfileResource;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.resources.ProfileResource;
+import com.techwatch.techwatchbackend.profiles.interfaces.rest.resources.UpdatePreferencesResource;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.resources.UpdateProfileResource;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.transform.CreateProfileCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.transform.ProfileResourceFromEntityAssembler;
+import com.techwatch.techwatchbackend.profiles.interfaces.rest.transform.UpdatePreferencesCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.transform.UpdateProfileCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
@@ -111,6 +113,33 @@ public class ProfilesController {
             @RequestBody UpdateProfileResource resource
     ) {
         var command = UpdateProfileCommandFromResourceAssembler.toCommandFromResource(profileId, resource);
+        var result = profileCommandService.handle(command);
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                ProfileResourceFromEntityAssembler::toResourceFromEntity,
+                HttpStatus.OK);
+    }
+
+    /**
+     * Update the preferences of a profile.
+     *
+     * @param profileId The profile id
+     * @param resource The {@link UpdatePreferencesResource} with the new preferences
+     * @return The {@link ProfileResource} resource for the updated profile
+     */
+    @PutMapping("/{profileId}/preferences")
+    @Operation(summary = "Update profile preferences", description = "Updates the preferences of a profile.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Preferences updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Profile not found")
+    })
+    public ResponseEntity<?> updatePreferences(
+            @PathVariable
+            @Parameter(description = "Unique profile identifier", example = "1", required = true)
+            Long profileId,
+            @RequestBody UpdatePreferencesResource resource
+    ) {
+        var command = UpdatePreferencesCommandFromResourceAssembler.toCommandFromResource(profileId, resource);
         var result = profileCommandService.handle(command);
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
