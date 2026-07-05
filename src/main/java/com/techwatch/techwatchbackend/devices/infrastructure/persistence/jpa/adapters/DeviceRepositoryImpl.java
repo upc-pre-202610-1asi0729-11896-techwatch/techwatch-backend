@@ -54,6 +54,11 @@ public class DeviceRepositoryImpl implements DeviceRepository {
     }
 
     @Override
+    public long countBySpaceIdIn(List<SpaceId> spaceIds) {
+        return devicePersistenceRepository.countBySpaceIdIn(spaceIds);
+    }
+
+    @Override
     public void deleteById(Long id) {
         devicePersistenceRepository.deleteById(id);
     }

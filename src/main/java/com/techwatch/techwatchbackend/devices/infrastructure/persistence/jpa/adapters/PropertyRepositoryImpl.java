@@ -1,6 +1,7 @@
 package com.techwatch.techwatchbackend.devices.infrastructure.persistence.jpa.adapters;
 
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Property;
+import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.SpaceId;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.UserId;
 import com.techwatch.techwatchbackend.devices.domain.repositories.PropertyRepository;
 import com.techwatch.techwatchbackend.devices.infrastructure.persistence.jpa.assemblers.PropertyPersistenceAssembler;
@@ -25,6 +26,12 @@ public class PropertyRepositoryImpl implements PropertyRepository {
     @Override
     public Optional<Property> findById(Long id) {
         return propertyPersistenceRepository.findById(id).map(PropertyPersistenceAssembler::toDomainFromPersistence);
+    }
+
+    @Override
+    public Optional<Property> findBySpaceId(SpaceId spaceId) {
+        return propertyPersistenceRepository.findBySpacesId(spaceId.spaceId())
+                .map(PropertyPersistenceAssembler::toDomainFromPersistence);
     }
 
     @Override

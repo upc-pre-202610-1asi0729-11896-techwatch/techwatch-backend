@@ -16,5 +16,6 @@ public interface DeviceRepository {
     Device save(Device device);
     boolean existsById(Long id);
     boolean existsBySpaceIdAndName(SpaceId spaceId, String name);
+    long countBySpaceIdIn(List<SpaceId> spaceIds);
     void deleteById(Long id);
 }
