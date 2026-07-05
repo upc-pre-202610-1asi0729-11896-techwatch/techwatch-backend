@@ -3,8 +3,10 @@ package com.techwatch.techwatchbackend.profiles.application.internal.commandserv
 import com.techwatch.techwatchbackend.profiles.application.commandservices.ProfileCommandService;
 import com.techwatch.techwatchbackend.profiles.domain.model.aggregates.Profile;
 import com.techwatch.techwatchbackend.profiles.domain.model.commands.CreateProfileCommand;
+import com.techwatch.techwatchbackend.profiles.domain.model.commands.UpdatePreferencesCommand;
 import com.techwatch.techwatchbackend.profiles.domain.model.commands.UpdateProfileCommand;
 import com.techwatch.techwatchbackend.profiles.domain.model.valueobjects.PersonName;
+import com.techwatch.techwatchbackend.profiles.domain.model.valueobjects.Preferences;
 import com.techwatch.techwatchbackend.profiles.domain.model.valueobjects.UserId;
 import com.techwatch.techwatchbackend.profiles.domain.repositories.ProfileRepository;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
@@ -48,6 +50,21 @@ public class ProfileCommandServiceImpl implements ProfileCommandService {
             return Result.success(updated);
         } catch (Exception e) {
             return Result.failure(ApplicationError.unexpected("update-profile", e.getMessage()));
+        }
+    }
+
+    @Override
+    public Result<Profile, ApplicationError> handle(UpdatePreferencesCommand command) {
+        var result = profileRepository.findById(command.profileId());
+        if (result.isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Profile", command.profileId().toString()));
+        }
+        try {
+            var updated = profileRepository.save(result.get().updatePreferences(
+                    new Preferences(command.language(), command.theme(), command.notificationsEnabled())));
+            return Result.success(updated);
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("update-preferences", e.getMessage()));
         }
     }
 }
