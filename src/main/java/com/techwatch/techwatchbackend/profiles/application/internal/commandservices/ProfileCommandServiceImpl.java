@@ -3,6 +3,8 @@ package com.techwatch.techwatchbackend.profiles.application.internal.commandserv
 import com.techwatch.techwatchbackend.profiles.application.commandservices.ProfileCommandService;
 import com.techwatch.techwatchbackend.profiles.domain.model.aggregates.Profile;
 import com.techwatch.techwatchbackend.profiles.domain.model.commands.CreateProfileCommand;
+import com.techwatch.techwatchbackend.profiles.domain.model.commands.UpdateProfileCommand;
+import com.techwatch.techwatchbackend.profiles.domain.model.valueobjects.PersonName;
 import com.techwatch.techwatchbackend.profiles.domain.model.valueobjects.UserId;
 import com.techwatch.techwatchbackend.profiles.domain.repositories.ProfileRepository;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
@@ -31,5 +33,21 @@ public class ProfileCommandServiceImpl implements ProfileCommandService {
             return Result.failure(ApplicationError.unexpected("create-profile", e.getMessage()));
         }
         return Result.success(profile.getId());
+    }
+
+    @Override
+    public Result<Profile, ApplicationError> handle(UpdateProfileCommand command) {
+        var result = profileRepository.findById(command.profileId());
+        if (result.isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Profile", command.profileId().toString()));
+        }
+        try {
+            var updated = profileRepository.save(result.get().updateInformation(
+                    new PersonName(command.firstName(), command.lastName()),
+                    command.phoneNumber(), command.profileImageUrl()));
+            return Result.success(updated);
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("update-profile", e.getMessage()));
+        }
     }
 }
