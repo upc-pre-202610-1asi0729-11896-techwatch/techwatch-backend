@@ -47,6 +47,9 @@ public class ConsumptionReportPersistenceEntity extends AuditableAbstractPersist
     @Column(name = "generated_at", nullable = false)
     private LocalDateTime generatedAt;
 
+    @Column(name = "is_automatic", nullable = false)
+    private Boolean isAutomatic;
+
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReportItemPersistenceEntity> items = new ArrayList<>();
 }

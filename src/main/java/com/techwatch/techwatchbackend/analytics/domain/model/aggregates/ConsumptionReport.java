@@ -63,6 +63,13 @@ public class ConsumptionReport extends AbstractDomainAggregateRoot<ConsumptionRe
     private LocalDateTime generatedAt;
 
     /**
+     * Whether the report was generated automatically by the system (e.g. when a simulation session
+     * ends) rather than requested on-demand by the user.
+     */
+    @Setter
+    private Boolean isAutomatic;
+
+    /**
      * The per-device lines of the report.
      */
     private List<ReportItem> items;
@@ -85,6 +92,7 @@ public class ConsumptionReport extends AbstractDomainAggregateRoot<ConsumptionRe
         this.propertyId = new PropertyId(command.propertyId());
         this.period = new ConsumptionPeriod(command.startDate(), command.endDate());
         this.generatedAt = LocalDateTime.now();
+        this.isAutomatic = command.isAutomatic();
         this.items = new ArrayList<>();
         this.totalConsumption = new EnergyConsumption(0.0, DEFAULT_UNIT);
     }
