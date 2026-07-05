@@ -3,6 +3,7 @@ package com.techwatch.techwatchbackend.devices.domain.model.aggregates;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.StartSimulationSessionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.entities.DeviceAction;
 import com.techwatch.techwatchbackend.devices.domain.model.entities.UsageDataRecord;
+import com.techwatch.techwatchbackend.devices.domain.model.events.SimulationSessionEndedEvent;
 import com.techwatch.techwatchbackend.devices.domain.model.events.UsageDataGeneratedEvent;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.DeviceId;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.PropertyId;
@@ -107,11 +108,17 @@ public class SimulationSession extends AbstractDomainAggregateRoot<SimulationSes
 
     /**
      * Ends the session, setting its status to ENDED and recording the end timestamp.
+     *
+     * <p>Registers a {@link SimulationSessionEndedEvent} so that the Analytics context can
+     * automatically generate a consumption report for the session's period.</p>
+     *
      * @return the updated SimulationSession instance.
      */
     public SimulationSession end() {
         this.status = SessionStatus.ENDED;
         this.endedAt = LocalDateTime.now();
+        registerDomainEvent(new SimulationSessionEndedEvent(
+                this.id, this.userId.userId(), this.propertyId.propertyId(), this.startedAt, this.endedAt));
         return this;
     }
 

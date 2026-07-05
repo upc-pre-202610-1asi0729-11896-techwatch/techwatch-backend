@@ -33,6 +33,7 @@ public class ConsumptionReportResourceFromEntityAssembler {
                 entity.getTotalConsumption().value(),
                 entity.getTotalConsumption().unit(),
                 entity.getGeneratedAt(),
+                entity.getIsAutomatic(),
                 items);
     }
 }

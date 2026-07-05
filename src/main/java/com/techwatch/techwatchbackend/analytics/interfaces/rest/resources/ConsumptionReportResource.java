@@ -34,6 +34,9 @@ public record ConsumptionReportResource(
         @Schema(description = "Moment the report was generated")
         LocalDateTime generatedAt,
 
+        @Schema(description = "Whether the report was generated automatically when a simulation session ended")
+        Boolean isAutomatic,
+
         @Schema(description = "Per-device lines of the report")
         List<ReportItemResource> items
 ) {

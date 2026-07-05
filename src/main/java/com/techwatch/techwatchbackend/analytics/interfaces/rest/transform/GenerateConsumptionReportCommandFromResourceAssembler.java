@@ -18,6 +18,7 @@ public class GenerateConsumptionReportCommandFromResourceAssembler {
                 resource.userId(),
                 resource.propertyId(),
                 resource.startDate(),
-                resource.endDate());
+                resource.endDate(),
+                false);
     }
 }
