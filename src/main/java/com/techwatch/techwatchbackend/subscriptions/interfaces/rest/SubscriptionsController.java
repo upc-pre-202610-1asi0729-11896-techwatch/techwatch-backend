@@ -4,9 +4,11 @@ import com.techwatch.techwatchbackend.shared.application.result.ApplicationError
 import com.techwatch.techwatchbackend.shared.application.result.Result;
 import com.techwatch.techwatchbackend.subscriptions.application.commandservices.SubscriptionCommandService;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates.Subscription;
+import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.ChangeSubscriptionPlanResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.RenewSubscriptionResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.ApplicationErrorResponseAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.CancelSubscriptionCommandFromResourceAssembler;
+import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.ChangeSubscriptionPlanCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.RenewSubscriptionCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.SubscriptionResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,6 +95,47 @@ public class SubscriptionsController {
             @PathVariable Long subscriptionId
     ) {
         var command = CancelSubscriptionCommandFromResourceAssembler.toCommandFromResource(subscriptionId);
+
+        var result = subscriptionCommandService.handle(command);
+
+        return switch (result) {
+            case Result.Success<Subscription, ApplicationError> success ->
+                    ResponseEntity.ok(
+                            SubscriptionResourceFromEntityAssembler.toResourceFromEntity(success.value())
+                    );
+
+            case Result.Failure<Subscription, ApplicationError> failure ->
+                    ApplicationErrorResponseAssembler.toResponseFromError(failure.error());
+        };
+    }
+
+    /**
+     * Changes the plan of an existing subscription.
+     *
+     * @param subscriptionId subscription id
+     * @param resource change plan request body
+     * @return updated subscription resource or application error
+     */
+    @Operation(
+            summary = "Change subscription plan",
+            description = "Changes the plan name of an active subscription."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Subscription plan changed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid change plan request"),
+            @ApiResponse(responseCode = "404", description = "Subscription not found"),
+            @ApiResponse(responseCode = "409", description = "Subscription plan cannot be changed due to a business rule"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PutMapping("/{subscriptionId}/plan")
+    public ResponseEntity<?> changeSubscriptionPlan(
+            @PathVariable Long subscriptionId,
+            @Valid @RequestBody ChangeSubscriptionPlanResource resource
+    ) {
+        var command = ChangeSubscriptionPlanCommandFromResourceAssembler.toCommandFromResource(
+                subscriptionId,
+                resource
+        );
 
         var result = subscriptionCommandService.handle(command);
 

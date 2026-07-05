@@ -5,6 +5,7 @@ import com.techwatch.techwatchbackend.shared.application.result.Result;
 import com.techwatch.techwatchbackend.subscriptions.application.commandservices.SubscriptionCommandService;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates.Subscription;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.commands.CancelSubscriptionCommand;
+import com.techwatch.techwatchbackend.subscriptions.domain.model.commands.ChangeSubscriptionPlanCommand;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.commands.RenewSubscriptionCommand;
 import com.techwatch.techwatchbackend.subscriptions.domain.repositories.SubscriptionRepository;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,28 @@ public class SubscriptionCommandServiceImpl implements SubscriptionCommandServic
             return Result.failure(ApplicationError.businessRuleViolation("cancel-subscription", e.getMessage()));
         } catch (Exception e) {
             return Result.failure(ApplicationError.unexpected("cancel-subscription", e.getMessage()));
+        }
+    }
+
+    @Override
+    public Result<Subscription, ApplicationError> handle(ChangeSubscriptionPlanCommand command) {
+        var result = subscriptionRepository.findById(command.subscriptionId());
+
+        if (result.isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Subscription", command.subscriptionId().toString()));
+        }
+
+        var subscription = result.get();
+
+        try {
+            var updatedSubscription = subscriptionRepository.save(subscription.changePlan(command.newPlanName()));
+            return Result.success(updatedSubscription);
+        } catch (IllegalStateException e) {
+            return Result.failure(ApplicationError.businessRuleViolation("change-subscription-plan", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return Result.failure(ApplicationError.businessRuleViolation("change-subscription-plan", e.getMessage()));
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("change-subscription-plan", e.getMessage()));
         }
     }
 }
