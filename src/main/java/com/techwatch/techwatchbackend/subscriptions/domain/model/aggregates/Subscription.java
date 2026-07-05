@@ -2,6 +2,7 @@ package com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates;
 
 import com.techwatch.techwatchbackend.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionCanceledEvent;
+import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionPlanChangedEvent;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionRenewedEvent;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.valueobjects.SubscriptionStatus;
 import lombok.Getter;
@@ -79,6 +80,31 @@ public class Subscription extends AbstractDomainAggregateRoot<Subscription> {
         this.status = SubscriptionStatus.CANCELED;
 
         registerDomainEvent(new SubscriptionCanceledEvent(this.id, LocalDate.now()));
+
+        return this;
+    }
+
+    public Subscription changePlan(String newPlanName) {
+        if (this.isCanceled()) {
+            throw new IllegalStateException("Canceled subscriptions cannot change plan");
+        }
+
+        if (this.isExpired()) {
+            throw new IllegalStateException("Expired subscriptions cannot change plan");
+        }
+
+        if (newPlanName == null || newPlanName.isBlank()) {
+            throw new IllegalArgumentException("newPlanName cannot be null or blank");
+        }
+
+        if (newPlanName.equalsIgnoreCase(this.planName)) {
+            throw new IllegalStateException("Subscription already has this plan");
+        }
+
+        this.planName = newPlanName;
+        this.status = SubscriptionStatus.ACTIVE;
+
+        registerDomainEvent(new SubscriptionPlanChangedEvent(this.id, this.planName, LocalDate.now()));
 
         return this;
     }
