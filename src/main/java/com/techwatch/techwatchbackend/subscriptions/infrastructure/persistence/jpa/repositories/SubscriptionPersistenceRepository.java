@@ -1,7 +1,5 @@
 package com.techwatch.techwatchbackend.subscriptions.infrastructure.persistence.jpa.repositories;
 
-package com.techwatch.techwatchbackend.subscriptions.infrastructure.persistence.jpa.repositories;
-
 import com.techwatch.techwatchbackend.subscriptions.domain.model.valueobjects.SubscriptionStatus;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.valueobjects.UserId;
 import com.techwatch.techwatchbackend.subscriptions.infrastructure.persistence.jpa.entities.SubscriptionPersistenceEntity;
