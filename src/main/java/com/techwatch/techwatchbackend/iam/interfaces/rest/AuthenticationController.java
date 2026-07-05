@@ -4,8 +4,11 @@ import com.techwatch.techwatchbackend.iam.application.commandservices.UserComman
 import com.techwatch.techwatchbackend.iam.application.queryservices.UserQueryService;
 import com.techwatch.techwatchbackend.iam.domain.model.aggregates.User;
 import com.techwatch.techwatchbackend.iam.domain.model.queries.GetUserByIdQuery;
+import com.techwatch.techwatchbackend.iam.interfaces.rest.resources.SignInResource;
 import com.techwatch.techwatchbackend.iam.interfaces.rest.resources.SignUpResource;
 import com.techwatch.techwatchbackend.iam.interfaces.rest.resources.UserResource;
+import com.techwatch.techwatchbackend.iam.interfaces.rest.transform.AuthenticatedUserResourceFromEntityAssembler;
+import com.techwatch.techwatchbackend.iam.interfaces.rest.transform.SignInCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.iam.interfaces.rest.transform.SignUpCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
@@ -63,5 +66,28 @@ public class AuthenticationController {
                 result,
                 UserResourceFromEntityAssembler::toResourceFromEntity,
                 HttpStatus.CREATED);
+    }
+
+    /**
+     * Authenticate an existing user.
+     *
+     * @param resource The {@link SignInResource} with the credentials
+     * @return The {@link com.techwatch.techwatchbackend.iam.interfaces.rest.resources.AuthenticatedUserResource}
+     * resource with the JWT bearer token
+     */
+    @PostMapping("/sign-in")
+    @Operation(summary = "User sign-in", description = "Authenticates a user and returns a JWT bearer token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User authenticated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid credentials"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<?> signIn(@RequestBody SignInResource resource) {
+        var command = SignInCommandFromResourceAssembler.toCommandFromResource(resource);
+        var result = userCommandService.handle(command);
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                pair -> AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(pair.getLeft(), pair.getRight()),
+                HttpStatus.OK);
     }
 }
