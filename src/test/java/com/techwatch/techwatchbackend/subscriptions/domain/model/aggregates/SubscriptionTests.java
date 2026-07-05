@@ -1,6 +1,7 @@
 package com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates;
 
 import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionCanceledEvent;
+import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionPlanChangedEvent;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionRenewedEvent;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.valueobjects.SubscriptionStatus;
 import org.junit.jupiter.api.Test;
@@ -121,5 +122,81 @@ class SubscriptionTests {
         );
 
         assertEquals("Expired subscriptions cannot be canceled", exception.getMessage());
+    }
+
+    @Test
+    void changeActiveSubscriptionPlanUpdatesPlanName() {
+        var subscription = new Subscription();
+
+        subscription.setId(7L);
+        subscription.setUserId(5L);
+        subscription.setPlanName("BASIC");
+        subscription.setStartDate(LocalDate.now().minusMonths(1));
+        subscription.setEndDate(LocalDate.now().plusDays(10));
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+
+        subscription.changePlan("PREMIUM");
+
+        assertEquals("PREMIUM", subscription.getPlanName());
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        assertEquals(1, subscription.domainEvents().size());
+        assertInstanceOf(SubscriptionPlanChangedEvent.class, subscription.domainEvents().iterator().next());
+    }
+
+    @Test
+    void changeSubscriptionPlanToSamePlanThrowsException() {
+        var subscription = new Subscription();
+
+        subscription.setId(8L);
+        subscription.setUserId(5L);
+        subscription.setPlanName("PREMIUM");
+        subscription.setStartDate(LocalDate.now().minusMonths(1));
+        subscription.setEndDate(LocalDate.now().plusDays(10));
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+
+        var exception = assertThrows(
+                IllegalStateException.class,
+                () -> subscription.changePlan("PREMIUM")
+        );
+
+        assertEquals("Subscription already has this plan", exception.getMessage());
+    }
+
+    @Test
+    void changeCanceledSubscriptionPlanThrowsException() {
+        var subscription = new Subscription();
+
+        subscription.setId(9L);
+        subscription.setUserId(5L);
+        subscription.setPlanName("BASIC");
+        subscription.setStartDate(LocalDate.now().minusMonths(1));
+        subscription.setEndDate(LocalDate.now().plusDays(10));
+        subscription.setStatus(SubscriptionStatus.CANCELED);
+
+        var exception = assertThrows(
+                IllegalStateException.class,
+                () -> subscription.changePlan("PREMIUM")
+        );
+
+        assertEquals("Canceled subscriptions cannot change plan", exception.getMessage());
+    }
+
+    @Test
+    void changeExpiredSubscriptionPlanThrowsException() {
+        var subscription = new Subscription();
+
+        subscription.setId(10L);
+        subscription.setUserId(5L);
+        subscription.setPlanName("BASIC");
+        subscription.setStartDate(LocalDate.now().minusMonths(2));
+        subscription.setEndDate(LocalDate.now().minusDays(5));
+        subscription.setStatus(SubscriptionStatus.EXPIRED);
+
+        var exception = assertThrows(
+                IllegalStateException.class,
+                () -> subscription.changePlan("PREMIUM")
+        );
+
+        assertEquals("Expired subscriptions cannot change plan", exception.getMessage());
     }
 }
