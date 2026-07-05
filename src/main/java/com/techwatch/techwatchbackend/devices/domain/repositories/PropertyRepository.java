@@ -1,6 +1,7 @@
 package com.techwatch.techwatchbackend.devices.domain.repositories;
 
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Property;
+import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.SpaceId;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.UserId;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Optional;
  */
 public interface PropertyRepository {
     Optional<Property> findById(Long id);
+    Optional<Property> findBySpaceId(SpaceId spaceId);
     List<Property> findAll();
     List<Property> findAllByUserId(UserId userId);
     Property save(Property property);

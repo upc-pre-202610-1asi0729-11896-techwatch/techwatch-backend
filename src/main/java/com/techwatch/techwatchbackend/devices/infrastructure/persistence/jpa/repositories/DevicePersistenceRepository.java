@@ -14,4 +14,5 @@ import java.util.List;
 public interface DevicePersistenceRepository extends JpaRepository<DevicePersistenceEntity, Long> {
     List<DevicePersistenceEntity> findAllBySpaceId(SpaceId spaceId);
     boolean existsBySpaceIdAndName(SpaceId spaceId, String name);
+    long countBySpaceIdIn(List<SpaceId> spaceIds);
 }

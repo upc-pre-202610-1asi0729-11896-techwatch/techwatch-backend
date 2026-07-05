@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring Data repository for property persistence entities.
@@ -13,5 +14,6 @@ import java.util.List;
 @Repository
 public interface PropertyPersistenceRepository extends JpaRepository<PropertyPersistenceEntity, Long> {
     List<PropertyPersistenceEntity> findAllByUserId(UserId userId);
+    Optional<PropertyPersistenceEntity> findBySpacesId(Long spaceId);
     boolean existsByUserIdAndName(UserId userId, String name);
 }
