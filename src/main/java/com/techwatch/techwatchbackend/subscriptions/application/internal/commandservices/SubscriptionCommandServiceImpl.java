@@ -4,12 +4,13 @@ import com.techwatch.techwatchbackend.shared.application.result.ApplicationError
 import com.techwatch.techwatchbackend.shared.application.result.Result;
 import com.techwatch.techwatchbackend.subscriptions.application.commandservices.SubscriptionCommandService;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates.Subscription;
+import com.techwatch.techwatchbackend.subscriptions.domain.model.commands.CancelSubscriptionCommand;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.commands.RenewSubscriptionCommand;
 import com.techwatch.techwatchbackend.subscriptions.domain.repositories.SubscriptionRepository;
 import org.springframework.stereotype.Service;
 
 /**
- * Application service that executes subscription commands.
+ * Application service implementation for subscription commands.
  */
 @Service
 public class SubscriptionCommandServiceImpl implements SubscriptionCommandService {
@@ -25,27 +26,38 @@ public class SubscriptionCommandServiceImpl implements SubscriptionCommandServic
         var result = subscriptionRepository.findById(command.subscriptionId());
 
         if (result.isEmpty()) {
-            return Result.failure(ApplicationError.notFound(
-                    "Subscription",
-                    command.subscriptionId().toString()
-            ));
+            return Result.failure(ApplicationError.notFound("Subscription", command.subscriptionId().toString()));
         }
 
         var subscription = result.get();
 
         try {
-            var updated = subscriptionRepository.save(subscription.renew(command.months()));
-            return Result.success(updated);
+            var renewedSubscription = subscriptionRepository.save(subscription.renew(command.months()));
+            return Result.success(renewedSubscription);
         } catch (IllegalStateException e) {
-            return Result.failure(ApplicationError.businessRuleViolation(
-                    "renew-subscription",
-                    e.getMessage()
-            ));
+            return Result.failure(ApplicationError.businessRuleViolation("renew-subscription", e.getMessage()));
         } catch (Exception e) {
-            return Result.failure(ApplicationError.unexpected(
-                    "renew-subscription",
-                    e.getMessage()
-            ));
+            return Result.failure(ApplicationError.unexpected("renew-subscription", e.getMessage()));
+        }
+    }
+
+    @Override
+    public Result<Subscription, ApplicationError> handle(CancelSubscriptionCommand command) {
+        var result = subscriptionRepository.findById(command.subscriptionId());
+
+        if (result.isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Subscription", command.subscriptionId().toString()));
+        }
+
+        var subscription = result.get();
+
+        try {
+            var canceledSubscription = subscriptionRepository.save(subscription.cancel());
+            return Result.success(canceledSubscription);
+        } catch (IllegalStateException e) {
+            return Result.failure(ApplicationError.businessRuleViolation("cancel-subscription", e.getMessage()));
+        } catch (Exception e) {
+            return Result.failure(ApplicationError.unexpected("cancel-subscription", e.getMessage()));
         }
     }
 }

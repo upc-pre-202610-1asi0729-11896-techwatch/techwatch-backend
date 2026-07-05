@@ -1,5 +1,6 @@
 package com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates;
 
+import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionCanceledEvent;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.events.SubscriptionRenewedEvent;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.valueobjects.SubscriptionStatus;
 import org.junit.jupiter.api.Test;
@@ -64,5 +65,61 @@ class SubscriptionTests {
         );
 
         assertEquals("Canceled subscriptions cannot be renewed", exception.getMessage());
+    }
+
+    @Test
+    void cancelActiveSubscriptionChangesStatusToCanceled() {
+        var subscription = new Subscription();
+
+        subscription.setId(4L);
+        subscription.setUserId(5L);
+        subscription.setPlanName("PREMIUM");
+        subscription.setStartDate(LocalDate.now().minusMonths(1));
+        subscription.setEndDate(LocalDate.now().plusDays(10));
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+
+        subscription.cancel();
+
+        assertEquals(SubscriptionStatus.CANCELED, subscription.getStatus());
+        assertEquals(1, subscription.domainEvents().size());
+        assertInstanceOf(SubscriptionCanceledEvent.class, subscription.domainEvents().iterator().next());
+    }
+
+    @Test
+    void cancelAlreadyCanceledSubscriptionThrowsException() {
+        var subscription = new Subscription();
+
+        subscription.setId(5L);
+        subscription.setUserId(5L);
+        subscription.setPlanName("PREMIUM");
+        subscription.setStartDate(LocalDate.now().minusMonths(1));
+        subscription.setEndDate(LocalDate.now().plusDays(10));
+        subscription.setStatus(SubscriptionStatus.CANCELED);
+
+        var exception = assertThrows(
+                IllegalStateException.class,
+                subscription::cancel
+        );
+
+        assertEquals("Subscription is already canceled", exception.getMessage());
+    }
+
+    @Test
+    void cancelExpiredSubscriptionThrowsException() {
+        var subscription = new Subscription();
+
+        subscription.setId(6L);
+        subscription.setUserId(5L);
+        subscription.setPlanName("BASIC");
+        subscription.setStartDate(LocalDate.now().minusMonths(2));
+        subscription.setEndDate(LocalDate.now().minusDays(5));
+        subscription.setStatus(SubscriptionStatus.EXPIRED);
+
+        var exception = assertThrows(
+                IllegalStateException.class,
+                subscription::cancel
+        );
+
+        assertEquals("Expired subscriptions cannot be canceled", exception.getMessage());
     }
 }
