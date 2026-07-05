@@ -1,6 +1,7 @@
 package com.techwatch.techwatchbackend.devices.domain.model.aggregates;
 
 import com.techwatch.techwatchbackend.devices.domain.model.commands.AddDeviceToSpaceCommand;
+import com.techwatch.techwatchbackend.devices.domain.model.events.DeviceStatusChangedEvent;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.DeviceStatus;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.DeviceType;
 import com.techwatch.techwatchbackend.devices.domain.model.valueobjects.PowerWatts;
@@ -92,20 +93,29 @@ public class Device extends AbstractDomainAggregateRoot<Device> {
 
     /**
      * Turns the device on.
+     * Registers a {@link DeviceStatusChangedEvent} if the status actually changes.
      * @return the updated Device instance.
      */
     public Device turnOn() {
-        this.status = DeviceStatus.ON;
+        changeStatusTo(DeviceStatus.ON);
         return this;
     }
 
     /**
      * Turns the device off.
+     * Registers a {@link DeviceStatusChangedEvent} if the status actually changes.
      * @return the updated Device instance.
      */
     public Device turnOff() {
-        this.status = DeviceStatus.OFF;
+        changeStatusTo(DeviceStatus.OFF);
         return this;
+    }
+
+    private void changeStatusTo(DeviceStatus newStatus) {
+        if (this.status == newStatus) return;
+        var previousStatus = this.status;
+        this.status = newStatus;
+        registerDomainEvent(new DeviceStatusChangedEvent(this.id, previousStatus.name(), newStatus.name()));
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.techwatch.techwatchbackend.devices.application.internal.commandservices;
 
 import com.techwatch.techwatchbackend.devices.application.commandservices.SimulationSessionCommandService;
+import com.techwatch.techwatchbackend.devices.domain.model.aggregates.Device;
 import com.techwatch.techwatchbackend.devices.domain.model.aggregates.SimulationSession;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.EndSimulationSessionCommand;
 import com.techwatch.techwatchbackend.devices.domain.model.commands.RecordDeviceActionCommand;
@@ -58,10 +59,26 @@ public class SimulationSessionCommandServiceImpl implements SimulationSessionCom
         session.recordAction(new DeviceId(command.deviceId()), command.actionType(),
                 command.parameterName(), command.parameterValue(), consumptionValue, "Wh");
         try {
+            applyStatusChange(device, command.actionType());
             var saved = simulationSessionRepository.save(session);
             return Result.success(saved);
         } catch (Exception e) {
             return Result.failure(ApplicationError.unexpected("record-device-action", e.getMessage()));
+        }
+    }
+
+    /**
+     * Turns the device on or off when the action type represents a power toggle, persisting the
+     * change so the device reflects its real status after the simulated action.
+     *
+     * @param device The target device.
+     * @param actionType The type of action recorded (e.g. TURN_ON, TURN_OFF, SET_TEMPERATURE).
+     */
+    private void applyStatusChange(Device device, String actionType) {
+        if ("TURN_ON".equalsIgnoreCase(actionType)) {
+            deviceRepository.save(device.turnOn());
+        } else if ("TURN_OFF".equalsIgnoreCase(actionType)) {
+            deviceRepository.save(device.turnOff());
         }
     }
 
