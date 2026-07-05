@@ -6,6 +6,7 @@ import com.techwatch.techwatchbackend.subscriptions.application.commandservices.
 import com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates.Subscription;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.RenewSubscriptionResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.ApplicationErrorResponseAssembler;
+import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.CancelSubscriptionCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.RenewSubscriptionCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.SubscriptionResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,6 +58,41 @@ public class SubscriptionsController {
                 subscriptionId,
                 resource
         );
+
+        var result = subscriptionCommandService.handle(command);
+
+        return switch (result) {
+            case Result.Success<Subscription, ApplicationError> success ->
+                    ResponseEntity.ok(
+                            SubscriptionResourceFromEntityAssembler.toResourceFromEntity(success.value())
+                    );
+
+            case Result.Failure<Subscription, ApplicationError> failure ->
+                    ApplicationErrorResponseAssembler.toResponseFromError(failure.error());
+        };
+    }
+
+    /**
+     * Cancels an existing subscription.
+     *
+     * @param subscriptionId subscription id
+     * @return canceled subscription resource or application error
+     */
+    @Operation(
+            summary = "Cancel a subscription",
+            description = "Cancels an active subscription and updates its status to CANCELED."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Subscription canceled successfully"),
+            @ApiResponse(responseCode = "404", description = "Subscription not found"),
+            @ApiResponse(responseCode = "409", description = "Subscription cannot be canceled due to a business rule"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/{subscriptionId}/cancel")
+    public ResponseEntity<?> cancelSubscription(
+            @PathVariable Long subscriptionId
+    ) {
+        var command = CancelSubscriptionCommandFromResourceAssembler.toCommandFromResource(subscriptionId);
 
         var result = subscriptionCommandService.handle(command);
 
