@@ -8,8 +8,10 @@ import com.techwatch.techwatchbackend.profiles.domain.model.queries.GetProfileBy
 import com.techwatch.techwatchbackend.profiles.domain.model.valueobjects.UserId;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.resources.CreateProfileResource;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.resources.ProfileResource;
+import com.techwatch.techwatchbackend.profiles.interfaces.rest.resources.UpdateProfileResource;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.transform.CreateProfileCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.profiles.interfaces.rest.transform.ProfileResourceFromEntityAssembler;
+import com.techwatch.techwatchbackend.profiles.interfaces.rest.transform.UpdateProfileCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.shared.application.result.ApplicationError;
 import com.techwatch.techwatchbackend.shared.application.result.Result;
 import com.techwatch.techwatchbackend.shared.interfaces.rest.transform.ResponseEntityAssembler;
@@ -87,6 +89,33 @@ public class ProfilesController {
         return profileQueryService.handle(new GetProfileByIdQuery(profileId))
                 .map(profile -> ResponseEntity.ok(ProfileResourceFromEntityAssembler.toResourceFromEntity(profile)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Update the information of a profile.
+     *
+     * @param profileId The profile id
+     * @param resource The {@link UpdateProfileResource} with the new profile data
+     * @return The {@link ProfileResource} resource for the updated profile
+     */
+    @PutMapping("/{profileId}")
+    @Operation(summary = "Update a profile", description = "Updates the personal information of a profile.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profile updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Profile not found")
+    })
+    public ResponseEntity<?> updateProfile(
+            @PathVariable
+            @Parameter(description = "Unique profile identifier", example = "1", required = true)
+            Long profileId,
+            @RequestBody UpdateProfileResource resource
+    ) {
+        var command = UpdateProfileCommandFromResourceAssembler.toCommandFromResource(profileId, resource);
+        var result = profileCommandService.handle(command);
+        return ResponseEntityAssembler.toResponseEntityFromResult(
+                result,
+                ProfileResourceFromEntityAssembler::toResourceFromEntity,
+                HttpStatus.OK);
     }
 
     /**
