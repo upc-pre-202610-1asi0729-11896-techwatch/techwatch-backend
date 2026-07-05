@@ -30,6 +30,7 @@ public final class ConsumptionReportPersistenceAssembler {
         report.setPeriod(toDomainFromPersistence(entity.getPeriod()));
         report.setTotalConsumption(toDomainFromPersistence(entity.getTotalConsumption()));
         report.setGeneratedAt(entity.getGeneratedAt());
+        report.setIsAutomatic(entity.getIsAutomatic());
 
         List<ReportItem> items = new ArrayList<>();
         for (var itemEntity : entity.getItems()) {
@@ -59,6 +60,7 @@ public final class ConsumptionReportPersistenceAssembler {
         entity.setPeriod(toPersistenceFromDomain(report.getPeriod()));
         entity.setTotalConsumption(toPersistenceFromDomain(report.getTotalConsumption()));
         entity.setGeneratedAt(report.getGeneratedAt());
+        entity.setIsAutomatic(report.getIsAutomatic());
 
         List<ReportItemPersistenceEntity> itemEntities = new ArrayList<>();
         for (var item : report.getItems()) {
