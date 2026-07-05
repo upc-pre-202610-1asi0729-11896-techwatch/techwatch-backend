@@ -7,13 +7,17 @@ import com.techwatch.techwatchbackend.subscriptions.application.commandservices.
 import com.techwatch.techwatchbackend.subscriptions.application.queryservices.SubscriptionQueryService;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.aggregates.Subscription;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.queries.GetActiveSubscriptionByUserIdQuery;
+import com.techwatch.techwatchbackend.subscriptions.domain.model.queries.GetPaymentsBySubscriptionIdQuery;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.queries.GetSubscriptionByIdQuery;
+import com.techwatch.techwatchbackend.subscriptions.domain.model.valueobjects.SubscriptionId;
 import com.techwatch.techwatchbackend.subscriptions.domain.model.valueobjects.UserId;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.ChangeSubscriptionPlanResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.CreateSubscriptionResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.RenewSubscriptionResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.SubscriptionResource;
+import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.resources.PaymentResource;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.CancelSubscriptionCommandFromResourceAssembler;
+import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.PaymentResourceFromEntityAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.ChangeSubscriptionPlanCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.CreateSubscriptionCommandFromResourceAssembler;
 import com.techwatch.techwatchbackend.subscriptions.interfaces.rest.transform.RenewSubscriptionCommandFromResourceAssembler;
@@ -26,6 +30,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -93,6 +99,30 @@ public class SubscriptionsController {
                 .map(subscription -> ResponseEntity.ok(
                         SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get all the payments of a subscription.
+     *
+     * @param subscriptionId The subscription id
+     * @return The list of {@link PaymentResource} resources for the subscription
+     */
+    @GetMapping("/{subscriptionId}/payments")
+    @Operation(summary = "Get payments by subscription", description = "Retrieves all the payments of the given subscription.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Payments retrieved successfully")
+    })
+    public ResponseEntity<List<PaymentResource>> getPaymentsBySubscriptionId(
+            @PathVariable
+            @Parameter(description = "Unique subscription identifier", example = "1", required = true)
+            Long subscriptionId
+    ) {
+        var payments = subscriptionQueryService.handle(
+                new GetPaymentsBySubscriptionIdQuery(new SubscriptionId(subscriptionId)));
+        var resources = payments.stream()
+                .map(PaymentResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+        return ResponseEntity.ok(resources);
     }
 
     /**
